@@ -2,6 +2,9 @@ const fs = require('fs');
 const Discord = require('discord.js');
 const { prefix, token } = require('./config.json');
 
+const usernameCacheFunction = require('./update-username-cache') 
+
+
 
 const client = new Discord.Client();
 client.commands = new Discord.Collection();
@@ -19,10 +22,32 @@ const cooldowns = new Discord.Collection();
 
 client.once('ready', () => {
 	console.log('Ready!');
+	usernameCacheFunction(client)
+
 });
 
-const list = client.guilds.get("803429347750576138");
-list.members.fetch().then(members => console.log(members))
+// const list = client.guilds.cache.get("803429347750576138");
+// console.log(list.members.cache.array());
+
+
+
+// Go through each of the members, and console.log() their name
+ 
+
+// list.members.fetch().then(members => console.log(members))
+const cron = require('cron');
+
+let counter = 0
+let scheduledMessage = new cron.CronJob('* 0 * * * *', () => {
+  // This runs every day at 10:30:00, you can do anything you want
+  	usernameCacheFunction(client)
+	console.log('cache updated ' + Date());
+});
+
+
+// When you want to start it, use:
+scheduledMessage.start()
+
 
 client.on(
   'message', message => {
@@ -30,10 +55,6 @@ client.on(
 
 	const args = message.content.slice(prefix.length).trim().split(' ');
 	const commandName = args.shift().toLowerCase();
-
-	// if (!client.commands.has(commandName)) return;
-	//
-	// const command = client.commands.get(commandName);
 
 	const command = client.commands.get(commandName)
 	|| client.commands.find(cmd => cmd.aliases && cmd.aliases.includes(commandName));
